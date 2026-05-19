@@ -6,10 +6,10 @@
     <title>Curl.gl - Vector Field Explorer</title>
     
     <meta property="og:title" content="Curl.gl - Vector Field Explorer">
-    <meta property="og:description" content="Interactive 3D field and curl visualiser.">
+    <meta property="og:description" content="Interactive 3D fluid dynamics and chaotic attractors.">
     <meta property="og:url" content="https://darshankalita.github.io/Curl.gl/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="https://darshankalita.github.io/Curl.gl/assets/Icon.png?v=5">
+    <meta property="og:image" content="https://darshankalita.github.io/Curl.gl/assets/Icon.png?v=6">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
@@ -21,28 +21,46 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
 
     <style>
-        body { margin: 0; overflow: hidden; background-color: #051024; color: #fff; font-family: monospace; }
+        * { box-sizing: border-box; }
+        body { margin: 0; overflow: hidden; background-color: #051024; color: #fff; font-family: monospace; touch-action: none; }
         #canvas-container { width: 100vw; height: 100vh; display: block; }
-        #info { position: absolute; top: 10px; left: 10px; z-index: 10; padding: 15px; background: rgba(5, 16, 36, 0.85); border: 1px solid #334; border-radius: 4px; pointer-events: none; }
+        
+        #info { position: absolute; top: 10px; left: 10px; z-index: 10; padding: 15px; background: rgba(5, 16, 36, 0.85); border: 1px solid #334; border-radius: 4px; pointer-events: none; max-width: 350px; }
         .axes-legend { margin-top: 10px; font-size: 11px; }
         
-        #math-render-panel { position: absolute; bottom: 20px; left: 10px; background: rgba(5, 16, 36, 0.9); border: 1px solid #445; padding: 15px; border-radius: 6px; font-size: 16px; min-width: 300px; pointer-events: auto; }
+        #math-render-panel { position: absolute; bottom: 20px; left: 10px; background: rgba(5, 16, 36, 0.9); border: 1px solid #445; padding: 15px; border-radius: 6px; font-size: 16px; min-width: 320px; max-width: 400px; pointer-events: auto; z-index: 10; }
         .math-row { margin-bottom: 8px; }
         .math-label { color: #88aaff; font-weight: bold; font-size: 12px; margin-bottom: 8px; }
         
-        #randomize-btn { 
-            width: 100%; margin-top: 10px; padding: 8px; 
-            background: #223355; color: #fff; border: 1px solid #4466aa; 
-            border-radius: 4px; cursor: pointer; font-family: monospace; font-weight: bold;
-            transition: background 0.2s;
+        .button-group { display: flex; gap: 8px; margin-top: 12px; }
+        .action-btn { 
+            background: rgba(5, 16, 36, 0.85); color: #fff; border: 1px solid #4466aa; 
+            padding: 10px; border-radius: 4px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 13px;
+            transition: all 0.2s ease; backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center;
         }
-        #randomize-btn:hover { background: #334477; }
+        .action-btn:hover { background: #334477; border-color: #6688cc; }
+        #randomize-btn { flex-grow: 1; }
+        .icon-btn { padding: 10px 14px; font-size: 16px; }
+
+        /* --- MOBILE RESPONSIVE QUERIES --- */
+        @media (max-width: 768px) {
+            #info { padding: 10px; font-size: 11px; max-width: calc(100vw - 60px); }
+            .axes-legend { display: none; } /* Hide secondary info to save space */
+            
+            #math-render-panel { 
+                bottom: 10px; left: 10px; right: 10px; 
+                min-width: 0; max-width: none; width: calc(100vw - 20px); 
+                padding: 12px; font-size: 14px; 
+            }
+            .action-btn { font-size: 12px; padding: 10px 8px; }
+            .icon-btn { padding: 10px; }
+        }
     </style>
 </head>
 <body>
     <div id="info">
         <strong>Curl.gl: Field Explorer</strong><br>
-        • Hover on canvas to spawn particles interactively.<br>
+        • Hover or drag to spawn particles.<br>
         • Primary Flow: Global Field (A)<br>
         • Red Flow: Global Curl (∇ × A)<br>
         <div class="axes-legend">
@@ -55,7 +73,11 @@
         <div id="latex-x" class="math-row"></div>
         <div id="latex-y" class="math-row"></div>
         <div id="latex-z" class="math-row"></div>
-        <button id="randomize-btn">🎲 Randomize Field</button>
+        <div class="button-group">
+            <button id="randomize-btn" class="action-btn">🎲 Randomize</button>
+            <button id="screenshot-btn" class="action-btn icon-btn" title="Save Screenshot">📸</button>
+            <button id="share-btn" class="action-btn icon-btn" title="Copy Link">🔗</button>
+        </div>
     </div>
 
     <div id="canvas-container"></div>
@@ -401,7 +423,10 @@
                 }
             }
         }
+        
+        // Added pointerdown to ensure clean touch-spawning on mobile devices
         window.addEventListener('pointermove', handleMouseAction);
+        window.addEventListener('pointerdown', handleMouseAction);
 
         const probeGroup = new THREE.Group();
         scene.add(probeGroup);
@@ -409,7 +434,12 @@
         const curlArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), 1, 0xff3333, 0.2, 0.1); probeGroup.add(curlArrow);
         const paddlewheel = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.04, 16, 1, false), new THREE.MeshBasicMaterial({ color: 0xff8888, wireframe: true, transparent: true, opacity: 0.8 })); probeGroup.add(paddlewheel);
 
-        const gui = new GUI({ width: 340 });
+        // --- GUI Configuration (Mobile Auto-Collapse) ---
+        const guiWidth = window.innerWidth > 768 ? 340 : window.innerWidth - 20;
+        const gui = new GUI({ width: guiWidth });
+        if (window.innerWidth <= 768) {
+            gui.close();
+        }
 
         function applyCustomFieldAction() {
             state.preset = 'Custom'; 
@@ -422,6 +452,24 @@
                 saveStateToURL(); 
             }
         }
+
+        // --- INLINE UTILITY BUTTONS ---
+        document.getElementById('share-btn').addEventListener('click', (e) => {
+            saveStateToURL();
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const btn = e.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅';
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+            });
+        });
+
+        document.getElementById('screenshot-btn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = `CurlGL-${state.preset.replace(/\s+/g, '-')}.png`;
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        });
 
         document.getElementById('randomize-btn').addEventListener('click', () => {
             const keys = Object.keys(presets);
@@ -510,7 +558,7 @@
         });
         
         fCore.add(state, 'mathScale', 0.01, 10.0).name('Topology Scale').onChange(() => { forceFullRespawn(); saveStateToURL(); });
-        fCore.add(state, 'hoverSpawn').name('Hover Spawning (Mouse)').onChange(saveStateToURL);
+        fCore.add(state, 'hoverSpawn').name('Hover Spawning (Mouse/Tap)').onChange(saveStateToURL);
 
         const fCustom = gui.addFolder('CAS Input (Math.js)');
         fCustom.add(state, 'customX').name('P(x,y,z) =').onFinishChange(applyCustomFieldAction);
