@@ -5,18 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Curl.gl - Advanced Vector Field Explorer</title>
     
-
-    
     <meta property="og:title" content="Curl.gl - Vector Field Explorer">
-<meta property="og:description" content="Interactive 3D fluid dynamics and chaotic attractors.">
-<meta property="og:url" content="https://darshankalita.github.io/Curl.gl/">
-<meta property="og:type" content="website">
-<meta property="og:image" content="https://darshankalita.github.io/Curl.gl/assets/Icon.png?v=2">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
+    <meta property="og:description" content="Interactive 3D fluid dynamics and chaotic attractors.">
+    <meta property="og:url" content="https://darshankalita.github.io/Curl.gl/">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://darshankalita.github.io/Curl.gl/assets/Icon.png?v=2">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     
-<link rel="icon" type="image/png" sizes="32x32" href="./assets/Icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/Icon.png">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -78,12 +76,12 @@
         import { GUI } from 'lil-gui';
 
         const container = document.getElementById('canvas-container');
-const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.autoClearColor = false; 
-renderer.setClearColor(0x051024, 1.0); // <--- THIS LINE FIXES THE BURN-IN
-container.appendChild(renderer.domElement);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.autoClearColor = false; 
+        renderer.setClearColor(0x051024, 1.0);
+        container.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000); 
@@ -282,7 +280,7 @@ container.appendChild(renderer.domElement);
 
         function updateColors(presetName) {
             const isAttractor = presetName.toLowerCase().includes('attractor');
-            const colorHex = isAttractor ? 0xffd700 : 0x00ccff; // Gold vs Cyan
+            const colorHex = isAttractor ? 0xffd700 : 0x00ccff;
             
             if (sysPrimary.matAccum.color.getHex() === colorHex) return;
 
@@ -304,19 +302,18 @@ container.appendChild(renderer.domElement);
 
         updateColors(state.preset);
         let currentScale = 1.0;
+        let wipeScreen = false;
 
         function respawnParticle(sys, i, targetX = null, targetY = null, targetZ = null) {
             let px = targetX, py = targetY, pz = targetZ;
             
             if (px === null) {
                 if (sys === sysCurl) {
-                    // Curl field ignores attractor basins and uniformly populates global space
                     const spread = 40 * currentScale; 
                     px = (Math.random() - 0.5) * spread;
                     py = (Math.random() - 0.5) * spread;
                     pz = (Math.random() - 0.5) * spread;
                 } else {
-                    // Primary field targets preset-specific basins
                     const conf = presets[state.preset];
                     const baseSpread = conf && conf.spread ? conf.spread : 40;
                     const center = conf && conf.center ? conf.center : [0,0,0];
@@ -364,7 +361,7 @@ container.appendChild(renderer.domElement);
             }
             activeTracers.forEach(disposeTracer);
             activeTracers.length = 0;
-            renderer.clear(true, true, true);
+            wipeScreen = true;
         }
 
         const raycaster = new THREE.Raycaster();
@@ -635,6 +632,13 @@ container.appendChild(renderer.domElement);
 
         function animate() {
             requestAnimationFrame(animate);
+            
+            if (wipeScreen) {
+                renderer.setClearColor(0x051024, 1.0);
+                renderer.clear(true, true, true);
+                wipeScreen = false;
+            }
+
             const delta = clock.getDelta();
             controls.update();
 
