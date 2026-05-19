@@ -1,7 +1,6 @@
 # [Curl.gl](https://darshankalita.github.io/Curl.gl/)
 A tool to help visualize vector fields and their curl.
 
-Find it here: [Curl.gl](https://darshankalita.github.io/Curl.gl/)
 *Heavily inspired by [Andrei Kashcha's Fieldplay](https://github.com/anvaka/fieldplay).*
 
 
