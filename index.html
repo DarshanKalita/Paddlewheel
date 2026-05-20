@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Curl.gl - Vector Field Simulator</title>
+    <title>VectoGL - Vector Field Simulator</title>
     
-    <meta property="og:title" content="Curl.gl - Vector Field Simulator">
+    <meta property="og:title" content="VectoGL - Vector Field Simulator">
     <meta property="og:description" content="Interactive 3D field and curl visualiser.">
     <meta property="og:url" content="https://darshankalita.github.io/Curl.gl/">
     <meta property="og:type" content="website">
@@ -466,7 +466,7 @@
 
         document.getElementById('screenshot-btn').addEventListener('click', () => {
             const link = document.createElement('a');
-            link.download = `CurlGL-${state.preset.replace(/\s+/g, '-')}.png`;
+            link.download = `VectoGL-${state.preset.replace(/\s+/g, '-')}.png`;
             link.href = renderer.domElement.toDataURL('image/png');
             link.click();
         });

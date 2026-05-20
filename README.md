@@ -1,4 +1,4 @@
-# [Curl.gl](https://darshankalita.github.io/Curl.gl/)
+# [VectoGL](https://darshankalita.github.io/vectogl/)
 A tool to help visualize vector fields and their curl.
 
 *Heavily inspired by [Andrei Kashcha's Fieldplay](https://github.com/anvaka/fieldplay).*
